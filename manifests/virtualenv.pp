@@ -97,10 +97,7 @@ define python::virtualenv (
     }
 
     if $virtualenv == undef {
-      $used_virtualenv = $version ? {
-        'system' => 'virtualenv',
-        default  => "virtualenv-${version}",
-      }
+      $used_virtualenv = 'virtualenv'
     } else {
       $used_virtualenv = $virtualenv
     }
@@ -119,9 +116,9 @@ define python::virtualenv (
     # --system-site-packages flag, default off for prior versions
     # Prior to version 1.7 the default was equal to --system-site-packages
     # and the flag --no-site-packages had to be passed to do the opposite
-    if (( versioncmp($::virtualenv_version,'1.7') > 0 ) and ( $systempkgs == true )) {
+    if (( versioncmp("${::virtualenv_version}",'1.7') > 0 ) and ( $systempkgs == true )) { # lint:ignore:only_variable_string
       $system_pkgs_flag = '--system-site-packages'
-    } elsif (( versioncmp($::virtualenv_version,'1.7') < 0 ) and ( $systempkgs == false )) {
+    } elsif (( versioncmp("${::virtualenv_version}",'1.7') < 0 ) and ( $systempkgs == false )) { # lint:ignore:only_variable_string
       $system_pkgs_flag = '--no-site-packages'
     } else {
       $system_pkgs_flag = $systempkgs ? {
@@ -154,10 +151,11 @@ define python::virtualenv (
       mode   => $mode
     }
 
+    $virtualenv_cmd = "${python::exec_prefix}${used_virtualenv}"
     $pip_cmd = "${python::exec_prefix}${venv_dir}/bin/pip"
 
     exec { "python_virtualenv_${venv_dir}":
-      command     => "true ${proxy_command} && ${used_virtualenv} ${system_pkgs_flag} -p ${python} ${venv_dir} && ${pip_cmd} wheel --help > /dev/null 2>&1 && { ${pip_cmd} wheel --version > /dev/null 2>&1 || wheel_support_flag='--no-use-wheel'; } ; { ${pip_cmd} --log ${venv_dir}/pip.log install ${pypi_index} ${proxy_flag} \$wheel_support_flag --upgrade pip ${distribute_pkg} || ${pip_cmd} --log ${venv_dir}/pip.log install ${pypi_index} ${proxy_flag}  --upgrade pip ${distribute_pkg} ;}",
+      command     => "true ${proxy_command} && ${virtualenv_cmd} ${system_pkgs_flag} -p ${python} ${venv_dir} && ${pip_cmd} wheel --help > /dev/null 2>&1 && { ${pip_cmd} wheel --version > /dev/null 2>&1 || wheel_support_flag='--no-use-wheel'; } ; { ${pip_cmd} --log ${venv_dir}/pip.log install ${pypi_index} ${proxy_flag} \$wheel_support_flag --upgrade pip ${distribute_pkg} || ${pip_cmd} --log ${venv_dir}/pip.log install ${pypi_index} ${proxy_flag}  --upgrade pip ${distribute_pkg} ;}",
       user        => $owner,
       creates     => "${venv_dir}/bin/activate",
       path        => $path,

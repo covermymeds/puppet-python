@@ -80,8 +80,20 @@ define python::pip (
   $uninstall_args  = '',
   $timeout         = 1800,
   $log_dir         = '/tmp',
+  $path            = ['/usr/local/bin','/usr/bin','/bin', '/usr/sbin'],
 ) {
 
+  $python_provider = getparam(Class['python'], 'provider')
+  $python_version  = getparam(Class['python'], 'version')
+  
+  # Get SCL exec prefix
+  # NB: this will not work if you are running puppet from scl enabled shell
+  $exec_prefix = $python_provider ? {
+    'scl'   => "scl enable ${python_version} -- ",
+    'rhscl' => "scl enable ${python_version} -- ",
+    default => '',
+  }
+  
   # Parameter validation
   if ! $virtualenv {
     fail('python::pip: virtualenv parameter must not be empty')
@@ -104,7 +116,7 @@ define python::pip (
   }
 
   $pip_env = $virtualenv ? {
-    'system' => 'pip',
+    'system' => "${exec_prefix}pip",
     default  => "${virtualenv}/bin/pip",
   }
 
@@ -180,8 +192,8 @@ define python::pip (
         group       => $group,
         cwd         => $cwd,
         environment => $environment,
-        path        => ['/usr/local/bin','/usr/bin','/bin', '/usr/sbin'],
         timeout     => $timeout,
+        path        => $path,
       }
     } else {
       exec { "pip_install_${name}":
@@ -191,8 +203,8 @@ define python::pip (
         group       => $group,
         cwd         => $cwd,
         environment => $environment,
-        path        => ['/usr/local/bin','/usr/bin','/bin', '/usr/sbin'],
         timeout     => $timeout,
+        path        => $path,
       }
     }
   } else {
@@ -207,8 +219,8 @@ define python::pip (
           group       => $group,
           cwd         => $cwd,
           environment => $environment,
-          path        => ['/usr/local/bin','/usr/bin','/bin', '/usr/sbin'],
           timeout     => $timeout,
+          path        => $path,
         }
       }
 
@@ -221,8 +233,8 @@ define python::pip (
           group       => $group,
           cwd         => $cwd,
           environment => $environment,
-          path        => ['/usr/local/bin','/usr/bin','/bin', '/usr/sbin'],
           timeout     => $timeout,
+          path        => $path,
         }
       }
 
@@ -235,8 +247,8 @@ define python::pip (
           group       => $group,
           cwd         => $cwd,
           environment => $environment,
-          path        => ['/usr/local/bin','/usr/bin','/bin', '/usr/sbin'],
           timeout     => $timeout,
+          path        => $path,
         }
       }
 
@@ -249,8 +261,8 @@ define python::pip (
           group       => $group,
           cwd         => $cwd,
           environment => $environment,
-          path        => ['/usr/local/bin','/usr/bin','/bin', '/usr/sbin'],
           timeout     => $timeout,
+          path        => $path,
         }
       }
     }

@@ -18,7 +18,7 @@ class python::install {
   $python = $::python::version ? {
     'system' => 'python',
     'pypy'   => 'pypy',
-    default  => "python${python::version}",
+    default  => $python::version,
   }
 
   $pythondev = $::osfamily ? {
@@ -50,16 +50,6 @@ class python::install {
     name   => $python,
   }
 
-  package { 'python-dev':
-    ensure => $dev_ensure,
-    name   => $pythondev,
-  }
-
-  package { 'pip':
-    ensure  => $pip_ensure,
-    require => Package['python'],
-  }
-
   package { 'virtualenv':
     ensure  => $venv_ensure,
     require => Package['python'],
@@ -67,6 +57,17 @@ class python::install {
 
   case $python::provider {
     pip: {
+
+      package { 'pip':
+        ensure  => $pip_ensure,
+        require => Package['python'],
+      }
+
+      package { 'python-dev':
+        ensure => $dev_ensure,
+        name   => $pythondev,
+      }
+
       # Install pip without pip, see https://pip.pypa.io/en/stable/installing/.
       exec { 'bootstrap pip':
         command => '/usr/bin/curl https://bootstrap.pypa.io/get-pip.py | python',
@@ -132,7 +133,7 @@ class python::install {
         tag => 'python-scl-package',
       }
 
-      package { "${python::version}-scldev":
+      package { "${python}-scldevel":
         ensure => $dev_ensure,
         tag    => 'python-scl-package',
       }
@@ -151,6 +152,17 @@ class python::install {
     }
 
     default: {
+
+      package { 'pip':
+        ensure  => $pip_ensure,
+        require => Package['python'],
+      }
+
+      package { 'python-dev':
+        ensure => $dev_ensure,
+        name   => $pythondev,
+      }
+
       if $::osfamily == 'RedHat' {
         if $pip_ensure != 'absent' {
           if $python::use_epel == true {

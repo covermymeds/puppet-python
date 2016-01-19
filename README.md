@@ -52,15 +52,15 @@ Installs and manages python, python-pip, python-dev, python-virtualenv and Gunic
 
 **ensure** - Desired installation state for the Python package. Options are absent, present and latest. Default: present
 
-**version** - Python version to install. Default: system default
+**version** - Python version to install. Default: system
 
 **pip** - Desired installation state for the python-pip package. Options are absent, present and latest. Default: present
 
-**dev** - Desired installation state for the python-dev package. Options are absent, present and latest. Default: present
+**dev** - Desired installation state for the python-dev package. Options are absent, present and latest. Default: absent
 
-**virtualenv** - Desired installation state for the virtualenv package. Options are absent, present and latest. Default: present
+**virtualenv** - Desired installation state for the virtualenv package. Options are absent, present and latest. Default: absent
 
-**gunicorn** - Desired installation state for Gunicorn. Options are absent, present and latest. Default: present
+**gunicorn** - Desired installation state for Gunicorn. Options are absent, present and latest. Default: absent
 
 **manage_gunicorn** - Allow Installation / Removal of Gunicorn. Default: true
 
@@ -70,9 +70,9 @@ Installs and manages python, python-pip, python-dev, python-virtualenv and Gunic
   class { 'python' :
     version    => 'system',
     pip        => 'present',
-    dev        => 'present',
-    virtualenv => 'present',
-    gunicorn   => 'present',
+    dev        => 'absent',
+    virtualenv => 'absent',
+    gunicorn   => 'absent',
   }
 ```
 
@@ -96,9 +96,9 @@ Installs and manages packages from pip.
 
 **egg** - The egg name to use. Default: `$name` of the class, e.g. cx_Oracle
 
-**install_args** - Array of additional flags to pass to pip during installaton. Default: none
+**install_args** - String of additional flags to pass to pip during installaton. Default: none
 
-**uninstall_args** - Array of additional flags to pass to pip during uninstall. Default: none
+**uninstall_args** - String of additional flags to pass to pip during uninstall. Default: none
 
 **timeout** - Timeout for the pip install command. Defaults to 1800.
 ```puppet
@@ -109,7 +109,7 @@ Installs and manages packages from pip.
     owner         => 'appuser',
     proxy         => 'http://proxy.domain.com:3128',
     environment   => 'ORACLE_HOME=/usr/lib/oracle/11.2/client64',
-    install_args  => ['-e'],
+    install_args  => '-e',
     timeout       => 1800,
    }
 ```
@@ -127,6 +127,8 @@ Installs and manages Python packages from requirements file.
 **src** - The `--src` parameter to `pip`, used to specify where to install `--editable` resources; by default no `--src` parameter is passed to `pip`.
 
 **group** - The group that was used to create the virtualenv.  This is used to create the requirements file with correct permissions if it's not present already.
+
+**manage_requirements** - Create the requirements file if it doesn't exist. Default: true
 
 ```puppet
   python::requirements { '/var/www/project1/requirements.txt' :
