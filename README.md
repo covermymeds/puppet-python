@@ -1,12 +1,10 @@
 # puppet-python [![Build Status](https://travis-ci.org/stankevich/puppet-python.svg?branch=master)](https://travis-ci.org/stankevich/puppet-python)
 
-Puppet module for installing and managing python, pip, and virtualenvs. This is a fork of https://github.com/stankevich/puppet-python which is designed to only support Red Hat Software Collections. 
+Puppet module for installing and managing python, pip, and virtualenvs. This is a fork of https://github.com/stankevich/puppet-python which is designed to *only* support Red Hat Software Collections (SCL).
 
 # Using SCL packages from RedHat or CentOS
 
-To use this module with Linux distributions in the Red Hat family and python distributions
-from softwarecollections.org, set python::provider to 'rhscl' and python::version to the name 
-of the collection you want to use (e.g., 'python27', 'python33', or 'rh-python34').
+SCL repositories are required for this module. Set them up through RHEL subscriptions/RHN or CentOS yum repos, but that is not handled by this module
 
 # Compatibility
 
@@ -56,7 +54,7 @@ Installs and manages python, python-pip, python-dev, python-virtualenv and Gunic
 
 **ensure** - Desired installation state for the Python package. Options are absent, present and latest. Default: present
 
-**version** - Python version to install. Default: system
+**version** - Python version to install. E.g. '27' for 'python27'. Default: '27'
 
 **pip** - Desired installation state for the python-pip package. Options are absent, present and latest. Default: present
 
@@ -65,7 +63,7 @@ Installs and manages python, python-pip, python-dev, python-virtualenv and Gunic
 **virtualenv** - Desired installation state for the virtualenv package. Options are absent, present and latest. Default: absent
 ```puppet
   class { 'python' :
-    version    => 'system',
+    version    => '27',
     pip        => 'present',
     dev        => 'absent',
     virtualenv => 'absent',
