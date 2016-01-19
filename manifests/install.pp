@@ -15,59 +15,40 @@
 #
 class python::install {
 
-  $python = $::python::version ? {
-    'system' => 'python',
-    'pypy'   => 'pypy',
-    default  => $python::version,
-  }
-
-  $pythondev = $::osfamily ? {
-    'RedHat' => "${python}-devel",
-    'Debian' => "${python}-dev",
-    'Suse'   => "${python}-devel",
-  }
-
-  $dev_ensure = $python::dev ? {
-    true    => 'present',
-    false   => 'absent',
-    default => $python::dev,
-  }
-
-  $pip_ensure = $python::pip ? {
-    true    => 'present',
-    false   => 'absent',
-    default => $python::pip,
-  }
-
-  $venv_ensure = $python::virtualenv ? {
-    true    => 'present',
-    false   => 'absent',
-    default => $python::virtualenv,
-  }
-
   package { 'python':
-    ensure => $python::ensure,
-    name   => $python,
+    ensure   => $::python::ensure,
+    name     => $::python::params::python_package,
+    provider => $::python::params::package_provider,
   }
 
   package { 'virtualenv':
-    ensure  => $venv_ensure,
-    require => Package['python'],
+    ensure   => $::python::virtualenv,
+    name     => $::python::params::virtualenv_package,
+    provider => $::python::params::package_provider,
+    require  => Package['python'],
+  }
+
+  package { 'pip':
+    ensure   => $::python::pip,
+    name     => $::python::params::pip_package,
+    provider => $::python::params::package_provider,
+    require  => Package['python'],
+  }
+
+  package { 'python-dev':
+    ensure   => $::python::dev,
+    name     => $::python::params::dev_package,
+    provider => $::python::params::package_provider,
+  }
+
+  if $python::manage_gunicorn {
+    package { 'gunicorn':
+      ensure => $gunicorn_ensure,
+    }
   }
 
   case $python::provider {
     pip: {
-
-      package { 'pip':
-        ensure  => $pip_ensure,
-        require => Package['python'],
-      }
-
-      package { 'python-dev':
-        ensure => $dev_ensure,
-        name   => $pythondev,
-      }
-
       # Install pip without pip, see https://pip.pypa.io/en/stable/installing/.
       exec { 'bootstrap pip':
         command => '/usr/bin/curl https://bootstrap.pypa.io/get-pip.py | python',
@@ -84,40 +65,23 @@ class python::install {
       }
 
       Exec['bootstrap pip'] -> File['pip-python'] -> Package <| provider == pip |>
-
-      Package <| title == 'pip' |> {
-        name     => 'pip',
-        provider => 'pip',
-      }
-      Package <| title == 'virtualenv' |> {
-        name     => 'virtualenv',
-        provider => 'pip',
-      }
     }
     scl: {
       # SCL is only valid in the RedHat family. If RHEL, package must be
       # enabled using the subscription manager outside of puppet. If CentOS,
       # the centos-release-SCL will install the repository.
-      $install_scl_repo_package = $::operatingsystem ? {
+      $scl_repo_package_ensure = $::operatingsystem ? {
         'CentOS' => 'present',
         default  => 'absent',
       }
 
       package { 'centos-release-SCL':
-        ensure => $install_scl_repo_package,
+        ensure => $scl_repo_package_ensure,
         before => Package['scl-utils'],
       }
       package { 'scl-utils':
         ensure => 'latest',
         before => Package['python'],
-      }
-
-      Package <| title == 'pip' |> {
-        name => "${python}-python-pip"
-      }
-
-      Package <| title == 'virtualenv' |> {
-        name => "${python}-python-virtualenv"
       }
     }
     rhscl: {
@@ -127,10 +91,6 @@ class python::install {
         source   => "https://www.softwarecollections.org/en/scls/rhscl/${::python::version}/epel-${::operatingsystemmajrelease}-${::architecture}/download/${scl_package}.noarch.rpm",
         provider => 'rpm',
         tag      => 'python-scl-repo',
-      }
-
-      Package <| title == 'python' |> {
-        tag => 'python-scl-package',
       }
 
       package { "${python}-scldevel":
@@ -146,23 +106,12 @@ class python::install {
         }
       }
 
-      Package <| tag == 'python-scl-repo' |> ->
+      Package <| name == 'python-scl-repo' |> ->
       Package <| tag == 'python-scl-package' |> ->
       Exec['python-scl-pip-install']
     }
 
     default: {
-
-      package { 'pip':
-        ensure  => $pip_ensure,
-        require => Package['python'],
-      }
-
-      package { 'python-dev':
-        ensure => $dev_ensure,
-        name   => $pythondev,
-      }
-
       if $::osfamily == 'RedHat' {
         if $pip_ensure != 'absent' {
           if $python::use_epel == true {
@@ -176,40 +125,8 @@ class python::install {
             Class['epel'] -> Package['virtualenv']
           }
         }
-
-        $virtualenv_package = "${python}-virtualenv"
-      } else {
-        $virtualenv_package = $::lsbdistcodename ? {
-          'jessie' => 'virtualenv',
-          default  => 'python-virtualenv',
-        }
       }
 
-      if $::python::version =~ /^3/ {
-        $pip_package = 'python3-pip'
-      } else {
-        $pip_package = 'python-pip'
-      }
-
-      Package <| title == 'pip' |> {
-        name => $pip_package,
-      }
-
-      Package <| title == 'virtualenv' |> {
-        name => $virtualenv_package,
-      }
-    }
-  }
-
-  if $python::manage_gunicorn {
-    $gunicorn_ensure = $python::gunicorn ? {
-      true    => 'present',
-      false   => 'absent',
-      default => $python::gunicorn,
-    }
-
-    package { 'gunicorn':
-      ensure => $gunicorn_ensure,
     }
   }
 }

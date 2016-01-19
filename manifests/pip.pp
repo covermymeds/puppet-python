@@ -67,7 +67,7 @@
 define python::pip (
   $pkgname         = $name,
   $ensure          = present,
-  $virtualenv      = 'system',
+  $virtualenv      = $::python::version,
   $url             = false,
   $owner           = 'root',
   $group           = 'root',

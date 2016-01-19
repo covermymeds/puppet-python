@@ -88,47 +88,14 @@ class python (
       "Only 'pip', 'rhscl' and 'scl' are valid providers besides the system default. Detected provider is <${provider}>.")
   }
 
-  $exec_prefix = $provider ? {
-    'scl'   => "scl enable ${version} -- ",
-    'rhscl' => "scl enable ${version} -- ",
-    default => '',
-  }
-
   validate_re($ensure, ['^(absent|present|latest)$'])
   validate_re($version, concat(['system', 'pypy'], $valid_versions))
-
-  if $pip == false or $pip == true {
-    warning('Use of boolean values for the $pip parameter is deprecated')
-  } else {
-    validate_re($pip, ['^(absent|present|latest)$'])
-  }
-
-  if $virtualenv == false or $virtualenv == true {
-    warning('Use of boolean values for the $virtualenv parameter is deprecated')
-  } else {
-    validate_re($virtualenv, ['^(absent|present|latest)$'])
-  }
-
-  if $virtualenv == false or $virtualenv == true {
-    warning('Use of boolean values for the $virtualenv parameter is deprecated')
-  } else {
-    validate_re($virtualenv, ['^(absent|present|latest)$'])
-  }
-
-  if $gunicorn == false or $gunicorn == true {
-    warning('Use of boolean values for the $gunicorn parameter is deprecated')
-  } else {
-    validate_re($gunicorn, ['^(absent|present|latest)$'])
-  }
-
+  validate_re($pip, ['^(absent|present|latest)$'])
+  validate_re($virtualenv, ['^(absent|present|latest)$'])
+  validate_re($virtualenv, ['^(absent|present|latest)$'])
+  validate_re($gunicorn, ['^(absent|present|latest)$'])
   validate_bool($manage_gunicorn)
   validate_bool($use_epel)
-
-  # Module compatibility check
-  $compatible = [ 'Debian', 'RedHat', 'Suse' ]
-  if ! ($::osfamily in $compatible) {
-    fail("Module is not compatible with ${::operatingsystem}")
-  }
 
   # Anchor pattern to contain dependencies
   anchor { 'python::begin': } ->
