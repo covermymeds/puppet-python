@@ -67,68 +67,23 @@
 # Garrett Honeycutt <code@garretthoneycutt.com>
 #
 class python (
-  $ensure                    = $python::params::ensure,
-  $version                   = $python::params::version,
-  $pip                       = $python::params::pip,
-  $dev                       = $python::params::dev,
-  $virtualenv                = $python::params::virtualenv,
-  $gunicorn                  = $python::params::gunicorn,
-  $manage_gunicorn           = $python::params::manage_gunicorn,
-  $provider                  = $python::params::provider,
-  $valid_versions            = $python::params::valid_versions,
-  $python_pips               = { },
-  $python_virtualenvs        = { },
-  $python_pyvenvs            = { },
-  $python_requirements       = { },
-  $use_epel                  = $python::params::use_epel,
-) inherits python::params{
+  Enum['present', 'absent'] $ensure              = $python::params::ensure,
+  String                    $version             = $python::params::version,
+  Enum['present', 'absent'] $pip                 = $python::params::pip,
+  Enum['present', 'absent'] $dev                 = $python::params::dev,
+  Enum['present', 'absent'] $virtualenv          = $python::params::virtualenv,
+  Hash                      $python_pips         = { },
+  Hash                      $python_virtualenvs  = { },
+  Hash                      $python_pyvenvs      = { },
+  Hash                      $python_requirements = { },
+) inherits python::params {
 
-  if $provider != undef and $provider != '' {
-    validate_re($provider, ['^(pip|scl|rhscl)$'],
-      "Only 'pip', 'rhscl' and 'scl' are valid providers besides the system default. Detected provider is <${provider}>.")
-  }
+  $python_package     = "python${version}"
+  $pip_package        = "${python_package}-python-pip"
+  $dev_package        = "${python_package}-python-devel"
+  $virtualenv_package = "${python_package}-python-virtualenv"
 
-  $exec_prefix = $provider ? {
-    'scl'   => "scl enable ${version} -- ",
-    'rhscl' => "scl enable ${version} -- ",
-    default => '',
-  }
-
-  validate_re($ensure, ['^(absent|present|latest)$'])
-  validate_re($version, concat(['system', 'pypy'], $valid_versions))
-
-  if $pip == false or $pip == true {
-    warning('Use of boolean values for the $pip parameter is deprecated')
-  } else {
-    validate_re($pip, ['^(absent|present|latest)$'])
-  }
-
-  if $virtualenv == false or $virtualenv == true {
-    warning('Use of boolean values for the $virtualenv parameter is deprecated')
-  } else {
-    validate_re($virtualenv, ['^(absent|present|latest)$'])
-  }
-
-  if $virtualenv == false or $virtualenv == true {
-    warning('Use of boolean values for the $virtualenv parameter is deprecated')
-  } else {
-    validate_re($virtualenv, ['^(absent|present|latest)$'])
-  }
-
-  if $gunicorn == false or $gunicorn == true {
-    warning('Use of boolean values for the $gunicorn parameter is deprecated')
-  } else {
-    validate_re($gunicorn, ['^(absent|present|latest)$'])
-  }
-
-  validate_bool($manage_gunicorn)
-  validate_bool($use_epel)
-
-  # Module compatibility check
-  $compatible = [ 'Debian', 'RedHat', 'Suse' ]
-  if ! ($::osfamily in $compatible) {
-    fail("Module is not compatible with ${::operatingsystem}")
-  }
+  $exec_prefix = "scl enable ${python_package} -- "
 
   # Anchor pattern to contain dependencies
   anchor { 'python::begin': } ->

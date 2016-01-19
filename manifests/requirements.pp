@@ -64,20 +64,20 @@
 # Fotis Gimian
 #
 define python::requirements (
-  $requirements           = $name,
-  $virtualenv             = 'system',
-  $owner                  = 'root',
-  $group                  = 'root',
-  $proxy                  = false,
-  $src                    = false,
-  $environment            = [],
-  $forceupdate            = false,
-  $cwd                    = undef,
-  $extra_pip_args         = '',
-  $manage_requirements    = true,
-  $fix_requirements_owner = true,
-  $log_dir                = '/tmp',
-  $timeout                = 1800,
+  String                  $requirements           = $name,
+  String                  $virtualenv             = 'system',
+  String                  $owner                  = 'root',
+  String                  $group                  = 'root',
+  Boolean                 $proxy                  = false,
+  Boolean                 $src                    = false,
+  Array                   $environment            = [],
+  Boolean                 $forceupdate            = false,
+  Optional[String]        $cwd                    = undef,
+  String                  $extra_pip_args         = '',
+  Boolean                 $manage_requirements    = true,
+  Boolean                 $fix_requirements_owner = true,
+  String                  $log_dir                = '/tmp',
+  Integer                 $timeout                = 1800,
 ) {
 
   if $virtualenv == 'system' and ($owner != 'root' or $group != 'root') {

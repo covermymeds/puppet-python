@@ -69,39 +69,27 @@
 # Shiva Poudel
 #
 define python::virtualenv (
-  $ensure           = present,
-  $version          = 'system',
-  $requirements     = false,
-  $systempkgs       = false,
-  $venv_dir         = $name,
-  $distribute       = true,
-  $index            = false,
-  $owner            = 'root',
-  $group            = 'root',
-  $mode             = '0755',
-  $proxy            = false,
-  $environment      = [],
-  $path             = [ '/bin', '/usr/bin', '/usr/sbin', '/usr/local/bin' ],
-  $cwd              = undef,
-  $timeout          = 1800,
-  $extra_pip_args   = '',
-  $virtualenv       = undef
+  Enum['present', 'absent'] $ensure           = 'present',
+  Optional[String]          $version          = undef, # unused, kept for compatibility
+  String                    $requirements     = '',
+  Boolean                   $systempkgs       = false,
+  String                    $venv_dir         = $name,
+  Boolean                   $distribute       = true,
+  Boolean                   $index            = false,
+  String                    $owner            = 'root',
+  String                    $group            = 'root',
+  String                    $mode             = '0755',
+  Boolean                   $proxy            = false,
+  Array                     $environment      = [],
+  Array                     $path             = [ '/bin', '/usr/bin', '/usr/sbin', '/usr/local/bin' ],
+  Optional[String]          $cwd              = undef,
+  Integer                   $timeout          = 1800,
+  String                    $extra_pip_args   = '',
+  Optional[String]          $virtualenv       = undef
 ) {
   include ::python
 
   if $ensure == 'present' {
-    $python = $version ? {
-      'system' => 'python',
-      'pypy'   => 'pypy',
-      default  => "python${version}",
-    }
-
-    if $virtualenv == undef {
-      $used_virtualenv = 'virtualenv'
-    } else {
-      $used_virtualenv = $virtualenv
-    }
-
     $proxy_flag = $proxy ? {
       false    => '',
       default  => "--proxy=${proxy}",
@@ -151,7 +139,7 @@ define python::virtualenv (
       mode   => $mode
     }
 
-    $virtualenv_cmd = "${python::exec_prefix}${used_virtualenv}"
+    $virtualenv_cmd = "${python::exec_prefix}virtualenv"
     $pip_cmd = "${python::exec_prefix}${venv_dir}/bin/pip"
 
     exec { "python_virtualenv_${venv_dir}":
@@ -165,7 +153,7 @@ define python::virtualenv (
       require     => File[$venv_dir],
     }
 
-    if $requirements {
+    if $requirements != '' {
       exec { "python_requirements_initial_install_${requirements}_${venv_dir}":
         command     => "${pip_cmd} wheel --help > /dev/null 2>&1 && { ${pip_cmd} wheel --version > /dev/null 2>&1 || wheel_support_flag='--no-use-wheel'; } ; ${pip_cmd} --log ${venv_dir}/pip.log install ${pypi_index} ${proxy_flag} \$wheel_support_flag -r ${requirements} ${extra_pip_args}",
         refreshonly => true,

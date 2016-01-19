@@ -65,35 +65,24 @@
 # Fotis Gimian
 #
 define python::pip (
-  $pkgname         = $name,
-  $ensure          = present,
-  $virtualenv      = 'system',
-  $url             = false,
-  $owner           = 'root',
-  $group           = 'root',
-  $index           = false,
-  $proxy           = false,
-  $egg             = false,
-  $editable        = false,
-  $environment     = [],
-  $install_args    = '',
-  $uninstall_args  = '',
-  $timeout         = 1800,
-  $log_dir         = '/tmp',
-  $path            = ['/usr/local/bin','/usr/bin','/bin', '/usr/sbin'],
+  String                    $pkgname        = $name,
+  Enum['present', 'absent'] $ensure         = 'present',
+  String                    $virtualenv     = 'system',
+  String                    $url            = '',
+  String                    $owner          = 'root',
+  String                    $group          = 'root',
+  Boolean                   $index          = false,
+  Boolean                   $proxy          = false,
+  Boolean                   $egg            = false,
+  Boolean                   $editable       = false,
+  Array                     $environment    = [],
+  String                    $install_args   = '',
+  String                    $uninstall_args = '',
+  Integer                   $timeout        = 1800,
+  String                    $log_dir        = '/tmp',
+  Array                     $path           = ['/usr/local/bin','/usr/bin','/bin', '/usr/sbin'],
 ) {
 
-  $python_provider = getparam(Class['python'], 'provider')
-  $python_version  = getparam(Class['python'], 'version')
-  
-  # Get SCL exec prefix
-  # NB: this will not work if you are running puppet from scl enabled shell
-  $exec_prefix = $python_provider ? {
-    'scl'   => "scl enable ${python_version} -- ",
-    'rhscl' => "scl enable ${python_version} -- ",
-    default => '',
-  }
-  
   # Parameter validation
   if ! $virtualenv {
     fail('python::pip: virtualenv parameter must not be empty')
@@ -116,7 +105,7 @@ define python::pip (
   }
 
   $pip_env = $virtualenv ? {
-    'system' => "${exec_prefix}pip",
+    'system' => "${::python::exec_prefix}pip",
     default  => "${virtualenv}/bin/pip",
   }
 
@@ -162,7 +151,7 @@ define python::pip (
   }
 
   $source = $url ? {
-    false               => $pkgname,
+    ''                  => $pkgname,
     /^(\/|[a-zA-Z]\:)/  => $url,
     /^(git\+|hg\+|bzr\+|svn\+)(http|https|ssh|svn|sftp|ftp|lp)(:\/\/).+$/ => $url,
     default             => "${url}#egg=${egg_name}",
