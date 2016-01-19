@@ -111,22 +111,12 @@ class python::install {
         before => Package['python'],
       }
 
-      # This gets installed as a dependency anyway
-      # package { "${python::version}-python-virtualenv":
-      #   ensure  => $venv_ensure,
-      #   require => Package['scl-utils'],
-      # }
-      package { "${python::version}-scldev":
-        ensure  => $dev_ensure,
-        require => Package['scl-utils'],
+      Package <| title == 'pip' |> {
+        name => "${python}-python-pip"
       }
-      if $pip_ensure != 'absent' {
-        exec { 'python-scl-pip-install':
-          command => "${python::params::exec_prefix}easy_install pip",
-          path    => ['/usr/bin', '/bin'],
-          creates => "/opt/rh/${python::version}/root/usr/bin/pip",
-          require => Package['scl-utils'],
-        }
+
+      Package <| title == 'virtualenv' |> {
+        name => "${python}-python-virtualenv"
       }
     }
     rhscl: {
