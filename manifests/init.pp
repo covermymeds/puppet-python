@@ -84,6 +84,8 @@ class python (
   $virtualenv_package = "${python_package}-python-virtualenv"
 
   $exec_prefix = "scl enable ${python_package} -- "
+  $scl_path    = "/opt/rh/${python_package}"
+  $scl_root    = "${scl_path}/root"
 
   # Anchor pattern to contain dependencies
   anchor { 'python::begin': } ->
